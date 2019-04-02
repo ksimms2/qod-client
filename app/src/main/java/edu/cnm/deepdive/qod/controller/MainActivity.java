@@ -10,8 +10,12 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.TextView;
+import edu.cnm.deepdive.android.BaseFluentAsyncTask.ResultListener;
 import edu.cnm.deepdive.qod.R;
+import edu.cnm.deepdive.qod.model.Quote;
 import edu.cnm.deepdive.qod.model.Source;
 import edu.cnm.deepdive.qod.service.QodService.GetQodTask;
 
@@ -27,7 +31,12 @@ public class MainActivity extends AppCompatActivity {
     setContentView(R.layout.activity_main);
     quoteText = findViewById(R.id.quote_text);
     sourceName = findViewById(R.id.source_name);
-    findViewById(R.id.answer_background).setOnClickListener((v) -> changeAnswer());
+    findViewById(R.id.answer_background).setOnClickListener(new OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        MainActivity.this.changeAnswer();
+      }
+    });
     listener = new ShakeListener();
   }
 
@@ -45,15 +54,18 @@ public class MainActivity extends AppCompatActivity {
 
   private void changeAnswer() {
     new GetQodTask()
-        .setSuccessListener((quote) -> {
-          quoteText.setText(quote.getText());
-          StringBuilder builder = new StringBuilder();
-          for (Source source : quote.getSources()) {
-            builder.append(source.getName());
-            builder.append("; ");
+        .setSuccessListener(new ResultListener<Quote>() {
+          @Override
+          public void handle(Quote quote) {
+            quoteText.setText(quote.getText());
+            StringBuilder builder = new StringBuilder();
+            for (Source source : quote.getSources()) {
+              builder.append(source.getName());
+              builder.append("; ");
+            }
+            sourceName.setText(builder.substring(0, builder.length() - 2));
+            MainActivity.this.fadeTogether(quoteText, sourceName);
           }
-          sourceName.setText(builder.substring(0, builder.length() - 2));
-          fadeTogether(quoteText, sourceName);
         })
         .execute();
   }
