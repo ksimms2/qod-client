@@ -4,12 +4,15 @@ import android.animation.AnimatorInflater;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.content.Context;
+import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
@@ -17,6 +20,7 @@ import edu.cnm.deepdive.android.BaseFluentAsyncTask.ResultListener;
 import edu.cnm.deepdive.qod.R;
 import edu.cnm.deepdive.qod.model.Quote;
 import edu.cnm.deepdive.qod.model.Source;
+import edu.cnm.deepdive.qod.service.GoogleSignInService;
 import edu.cnm.deepdive.qod.service.QodService.GetQodTask;
 
 public class MainActivity extends AppCompatActivity {
@@ -124,4 +128,33 @@ public class MainActivity extends AppCompatActivity {
 
   }
 
+  @Override
+  public boolean onCreateOptionsMenu(Menu menu) {
+    getMenuInflater().inflate(R.menu.main_options, menu);
+    return true;
+  }
+
+  public boolean onOptionsItemSelected(MenuItem item) {
+    boolean handled = true;
+    switch (item.getItemId()) {
+      case R.id.sign_out:
+        signOut();
+        break;
+      default:
+        handled = super.onOptionsItemSelected(item);
+    }
+    return handled;
+  }
+
+  private void signOut(){
+    GoogleSignInService.getInstance().getClient()
+        .signOut().addOnCompleteListener(this, (task)-> {
+      GoogleSignInService.getInstance().setAccount(null);
+      Intent intent = new Intent(this, LoginActivity.class);
+      intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+      startActivity(intent);
+    });
+  }
 }
+
+
